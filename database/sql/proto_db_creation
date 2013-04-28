@@ -1,0 +1,161 @@
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
+
+DROP SCHEMA IF EXISTS `bookings` ;
+CREATE SCHEMA IF NOT EXISTS `bookings` DEFAULT CHARACTER SET utf8 ;
+USE `bookings` ;
+
+-- -----------------------------------------------------
+-- Table `bookings`.`customers`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `bookings`.`customers` ;
+
+CREATE  TABLE IF NOT EXISTS `bookings`.`customers` (
+  `idpeople` INT NOT NULL ,
+  `firstname` VARCHAR(254) NOT NULL ,
+  `lastname` VARCHAR(254) NOT NULL ,
+  `email` VARCHAR(254) NOT NULL ,
+  `email2` VARCHAR(45) NULL ,
+  `phone` VARCHAR(20) NULL ,
+  `sex` CHAR(1) NULL DEFAULT M ,
+  `registered_since` VARCHAR(254) NOT NULL ,
+  PRIMARY KEY (`idpeople`) )
+ENGINE = InnoDB;
+
+CREATE UNIQUE INDEX `idpeople_UNIQUE` ON `bookings`.`customers` (`idpeople` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `bookings`.`addresshistory`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `bookings`.`addresshistory` ;
+
+CREATE  TABLE IF NOT EXISTS `bookings`.`addresshistory` (
+  `addresses` INT NOT NULL ,
+  `idpeople` INT NOT NULL ,
+  `addressline1` VARCHAR(45) NOT NULL ,
+  `addressline2` VARCHAR(45) NOT NULL ,
+  `addressline3` VARCHAR(45) NULL ,
+  `postcode` VARCHAR(10) NOT NULL ,
+  `county` VARCHAR(100) NULL ,
+  `country` VARCHAR(100) NULL ,
+  PRIMARY KEY (`addresses`, `idpeople`) ,
+  CONSTRAINT `fk_addresshistory_1`
+    FOREIGN KEY (`idpeople` )
+    REFERENCES `bookings`.`customers` (`idpeople` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE INDEX `fk_addresshistory_1` ON `bookings`.`addresshistory` (`idpeople` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `bookings`.`enquiries`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `bookings`.`enquiries` ;
+
+CREATE  TABLE IF NOT EXISTS `bookings`.`enquiries` (
+  `idenquiries` INT NOT NULL ,
+  `arrival_date` DATETIME NOT NULL ,
+  `depart_date` DATETIME NULL ,
+  `numofnights` INT NOT NULL DEFAULT 7 ,
+  `numofadults` INT NOT NULL DEFAULT 2 ,
+  `numofkids` INT NULL DEFAULT 0 ,
+  `message` DATETIME NULL ,
+  `idpeople` INT NOT NULL ,
+  PRIMARY KEY (`idenquiries`, `idpeople`) ,
+  CONSTRAINT `fk_enquiries_1`
+    FOREIGN KEY (`idpeople` )
+    REFERENCES `bookings`.`customers` (`idpeople` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE INDEX `fk_enquiries_1` ON `bookings`.`enquiries` (`idpeople` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `bookings`.`units`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `bookings`.`units` ;
+
+CREATE  TABLE IF NOT EXISTS `bookings`.`units` (
+  `idunits` INT NOT NULL ,
+  PRIMARY KEY (`idunits`) )
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `bookings`.`properties`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `bookings`.`properties` ;
+
+CREATE  TABLE IF NOT EXISTS `bookings`.`properties` (
+  `idproperties` INT NOT NULL ,
+  PRIMARY KEY (`idproperties`) )
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `bookings`.`property_unit`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `bookings`.`property_unit` ;
+
+CREATE  TABLE IF NOT EXISTS `bookings`.`property_unit` (
+  `idproperty_unit` INT NOT NULL ,
+  `idunits` INT NOT NULL ,
+  `idproperties` INT NOT NULL ,
+  PRIMARY KEY (`idproperty_unit`) ,
+  CONSTRAINT `fk_property_units_units1`
+    FOREIGN KEY (`idunits` )
+    REFERENCES `bookings`.`units` (`idunits` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_property_units_properties1`
+    FOREIGN KEY (`idproperties` )
+    REFERENCES `bookings`.`properties` (`idproperties` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE INDEX `fk_property_units_properties1` ON `bookings`.`property_unit` (`idproperties` ASC) ;
+
+
+-- -----------------------------------------------------
+-- Table `bookings`.`reservations`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `bookings`.`reservations` ;
+
+CREATE  TABLE IF NOT EXISTS `bookings`.`reservations` (
+  `idreservation` INT NOT NULL ,
+  `arrival_date` DATETIME NOT NULL ,
+  `depart_date` DATETIME NOT NULL ,
+  `numofnights` INT NOT NULL ,
+  `numofadults` INT NOT NULL DEFAULT 2 ,
+  `numofkids` INT NULL DEFAULT 0 ,
+  `enquiries_idenquiries` INT NOT NULL ,
+  `property_unit_idproperty_unit` INT NOT NULL ,
+  PRIMARY KEY (`idreservation`, `enquiries_idenquiries`, `property_unit_idproperty_unit`) ,
+  CONSTRAINT `fk_reservations_enquiries`
+    FOREIGN KEY (`enquiries_idenquiries` )
+    REFERENCES `bookings`.`enquiries` (`idenquiries` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_reservations_property_unit1`
+    FOREIGN KEY (`property_unit_idproperty_unit` )
+    REFERENCES `bookings`.`property_unit` (`idproperty_unit` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE INDEX `fk_reservations_enquiries` ON `bookings`.`reservations` (`enquiries_idenquiries` ASC) ;
+
+CREATE INDEX `fk_reservations_property_unit1` ON `bookings`.`reservations` (`property_unit_idproperty_unit` ASC) ;
+
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
